@@ -1,0 +1,67 @@
+# 可自行輸入名稱
+# 是否啟用，輸入 true 或 false
+# rpc 依照順序自行填入，可以新增可以刪減，但無法留白
+
+[networks."Ethereum主網"]
+enabled = true
+rpc = [
+  "https://ethereum-rpc.publicnode.com",
+  "https://eth.drpc.org",
+  "https://1rpc.io/eth",
+  "https://eth.blockrazor.xyz",
+  "https://rpc.fullsend.to",
+]
+
+[networks."Binance Smart Chain"]
+enabled = false
+rpc = [
+  "https://bsc-dataseed.binance.org",
+  "https://bsc.blockrazor.xyz",
+  "https://1rpc.io/bnb",
+]
+
+[networks."Polygon網"]
+enabled = false
+rpc = [
+  "https://poly.api.pocket.network",
+  "https://polygon.drpc.org",
+  "https://1rpc.io/matic",
+]
+
+[networks."Arbitrum網"]
+enabled = false
+rpc = [
+  "https://arb1.arbitrum.io/rpc",
+  "https://arbitrum.drpc.org",
+  "https://1rpc.io/arb",
+]
+
+[networks."Optimism網"]
+enabled = false
+rpc = [
+  "https://mainnet.optimism.io",
+  "https://optimism.drpc.org",
+  "https://1rpc.io/op",
+]
+
+# 可依照需求，按照上面的格式自行增加更多的鏈
+
+[settings]
+import_file = "addresses.txt"  # 輸入檔案名稱
+output_formats = ['json', 'csv', 'xlsx']  # 輸出格式：可選 'json', 'csv', 'xlsx'
+use_proxy = true  # 是否使用代理檢查
+proxy_file = "proxy.txt"  # 代理文件路徑
+proxy_rotation_strategy = "rotate"  # 代理輪換策略：'rotate' 或 'random'
+proxy_timeout = 15  # 代理請求超時時間（秒）
+proxy_retry_times = 3  # 代理重試次數
+proxy_fallback_no_proxy = false  # 代理出錯是否回退到無代理
+batch_size = 30  # 批次大小（每批最多查詢多少個地址）
+batch_delay = 5.0  # 批次之間的延遲時間（秒）
+concurrent_requests = 10  # 並行查詢數（同時發送多少個RPC請求）
+debug = false  # true 顯示完整錯誤；false 顯示精簡錯誤
+retry_delay_seconds = 5.0  # 單一地址每次重試間隔秒數（同一輪內）
+retry_failed_wallets = true  # 是否只針對失敗地址做下一輪重試
+retry_until_all_success = true  # 是否持續重試直到全部成功
+max_retry_rounds = 0  # 0 代表不限制輪數；1 代表只跑第一輪
+retry_round_delay = 10.0  # 每輪之間等待秒數
+
