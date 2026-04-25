@@ -1,5 +1,12 @@
 # 更新日誌
 
+## [1.3.1] - 2026-04-25
+
+### 改進
+- 新增 `utils/console.py`，統一管理終端顏色與輸出函式（`print_success`、`print_warn`、`print_error`、`color_text`）。
+- `tx_checker.py` 移除內建 ANSI 色碼常數，改為統一使用 `utils/console.py`。
+- `test_rpc.py` 顏色輸出改為統一使用 `utils/console.py`，與主程式保持一致。
+
 ## [1.3.0] - 2026-04-25
 
 ### 新增功能

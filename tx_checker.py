@@ -14,6 +14,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from utils.console import (
+    COLOR_YELLOW,
+    color_text,
+    print_error,
+    print_success,
+    print_warn,
+)
 
 try:
     import tomllib
@@ -62,12 +69,6 @@ def get_enabled_network(config: Dict) -> str:
 config = load_config()
 settings = config.get('settings', {})
 
-# 終端顏色
-COLOR_RESET = "\033[0m"
-COLOR_RED = "\033[91m"
-COLOR_YELLOW = "\033[93m"
-COLOR_GREEN = "\033[92m"
-
 SELECTED_NETWORK = get_enabled_network(config)
 BATCH_SIZE = settings['batch_size']
 BATCH_DELAY = settings['batch_delay']
@@ -103,10 +104,10 @@ def ensure_file_with_sample(target_file: str) -> bool:
         return True
 
     sample_path = target_path.with_name(f"{target_path.stem}-Sample{target_path.suffix}")
-    print(f"{COLOR_YELLOW}⚠️  找不到文件: {target_path}{COLOR_RESET}")
+    print_warn(f"⚠️  找不到文件: {target_path}")
 
     if not sample_path.exists():
-        print(f"{COLOR_RED}✗ 也找不到樣本文件: {sample_path}{COLOR_RESET}")
+        print_error(f"✗ 也找不到樣本文件: {sample_path}")
         return False
 
     while True:
@@ -114,13 +115,13 @@ def ensure_file_with_sample(target_file: str) -> bool:
         if answer in ("y", "yes"):
             try:
                 shutil.copyfile(sample_path, target_path)
-                print(f"{COLOR_GREEN}✓ 已建立: {target_path}{COLOR_RESET}")
+                print_success(f"✓ 已建立: {target_path}")
                 return True
             except Exception as e:
-                print(f"{COLOR_RED}✗ 建立文件失敗: {e}{COLOR_RESET}")
+                print_error(f"✗ 建立文件失敗: {e}")
                 return False
         if answer in ("n", "no"):
-            print(f"{COLOR_RED}✗ 已取消建立 {target_path.name}{COLOR_RESET}")
+            print_error(f"✗ 已取消建立 {target_path.name}")
             return False
         print("請輸入 y 或 n")
 
@@ -424,13 +425,13 @@ class TxChecker:
 
         while pending_addresses:
             if MAX_RETRY_ROUNDS > 0 and round_num > MAX_RETRY_ROUNDS:
-                print(f"{COLOR_YELLOW}⚠️  已達最大輪數 {MAX_RETRY_ROUNDS}，停止重試。{COLOR_RESET}")
+                print_warn(f"⚠️  已達最大輪數 {MAX_RETRY_ROUNDS}，停止重試。")
                 break
 
             total_addresses = len(pending_addresses)
             round_failures: List[str] = []
 
-            print(f"\n{COLOR_YELLOW}===== 第 {round_num} 輪：待查詢 {total_addresses} 個地址 ====={COLOR_RESET}")
+            print(f"\n{color_text(f'===== 第 {round_num} 輪：待查詢 {total_addresses} 個地址 =====', COLOR_YELLOW)}")
 
             # 按批次分組查詢
             for batch_num in range(0, total_addresses, BATCH_SIZE):
@@ -455,15 +456,15 @@ class TxChecker:
                             tx_count, err_msg = future.result()
                             if tx_count is not None:
                                 all_results[address] = tx_count
-                                print(f"{COLOR_GREEN}[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} → {tx_count} 筆交易{COLOR_RESET}")
+                                print_success(f"[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} → {tx_count} 筆交易")
                             else:
                                 round_failures.append(address)
                                 shown_err = err_msg or "查詢失敗"
-                                print(f"{COLOR_RED}[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} ✗ {shown_err}{COLOR_RESET}")
+                                print_error(f"[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} ✗ {shown_err}")
                         except Exception as e:
                             round_failures.append(address)
                             err_msg = str(e) if DEBUG_MODE else self._short_error_message(str(e))
-                            print(f"{COLOR_RED}[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} ✗ 異常: {err_msg}{COLOR_RESET}")
+                            print_error(f"[{current_idx}/{total_addresses}] 查詢 {address[:10]}...{address[-8:]} ✗ 異常: {err_msg}")
 
                 # 如果還有下一批，顯示延遲信息
                 if batch_end < total_addresses and BATCH_DELAY > 0:
@@ -476,15 +477,15 @@ class TxChecker:
 
             # 全部成功則結束
             if not round_failures:
-                print(f"{COLOR_GREEN}\n✓ 第 {round_num} 輪後已全部成功查詢。{COLOR_RESET}")
+                print_success(f"\n✓ 第 {round_num} 輪後已全部成功查詢。")
                 break
 
             # 若未啟用直到全成功，則只跑第一輪
             if not RETRY_UNTIL_ALL_SUCCESS:
-                print(f"{COLOR_YELLOW}\n⚠️  仍有 {len(round_failures)} 個地址失敗，因配置限制不再重試。{COLOR_RESET}")
+                print_warn(f"\n⚠️  仍有 {len(round_failures)} 個地址失敗，因配置限制不再重試。")
                 break
 
-            print(f"{COLOR_YELLOW}\n⚠️  第 {round_num} 輪仍有 {len(round_failures)} 個地址失敗，下一輪僅重試失敗地址。{COLOR_RESET}")
+            print_warn(f"\n⚠️  第 {round_num} 輪仍有 {len(round_failures)} 個地址失敗，下一輪僅重試失敗地址。")
             pending_addresses = round_failures
             round_num += 1
 

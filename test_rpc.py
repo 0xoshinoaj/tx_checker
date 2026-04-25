@@ -9,17 +9,12 @@ import time
 from typing import Dict, List, Tuple
 
 import requests
+from utils.console import COLOR_GREEN, COLOR_RED, COLOR_YELLOW, color_text, print_error, print_warn
 
 try:
     import tomllib
 except ImportError:
     import tomli as tomllib
-
-
-COLOR_RESET = "\033[0m"
-COLOR_RED = "\033[91m"
-COLOR_YELLOW = "\033[93m"
-COLOR_GREEN = "\033[92m"
 
 
 def load_config(path: str = "config.toml") -> Dict:
@@ -28,10 +23,10 @@ def load_config(path: str = "config.toml") -> Dict:
         with open(path, "rb") as f:
             return tomllib.load(f)
     except FileNotFoundError:
-        print(f"{COLOR_RED}✗ 找不到配置文件: {path}{COLOR_RESET}")
+        print_error(f"✗ 找不到配置文件: {path}")
         sys.exit(1)
     except Exception as e:
-        print(f"{COLOR_RED}✗ 讀取配置文件失敗: {e}{COLOR_RESET}")
+        print_error(f"✗ 讀取配置文件失敗: {e}")
         sys.exit(1)
 
 
@@ -83,10 +78,10 @@ def main() -> None:
     networks = cfg.get("networks", {})
 
     if not networks:
-        print(f"{COLOR_RED}✗ config.toml 未找到 networks 設定{COLOR_RESET}")
+        print_error("✗ config.toml 未找到 networks 設定")
         sys.exit(1)
 
-    print(f"{COLOR_YELLOW}🧪 開始測試 config.toml 內所有 RPC（timeout={timeout_sec}s）{COLOR_RESET}")
+    print_warn(f"🧪 開始測試 config.toml 內所有 RPC（timeout={timeout_sec}s）")
     print("-" * 72)
 
     total = 0
@@ -100,7 +95,7 @@ def main() -> None:
             continue
 
         status = "enabled" if enabled else "disabled"
-        print(f"\n{COLOR_YELLOW}[{net_name}] ({status}){COLOR_RESET}")
+        print(f"\n{color_text(f'[{net_name}] ({status})', COLOR_YELLOW)}")
 
         for idx, rpc_url in enumerate(rpc_list, start=1):
             total += 1
@@ -108,24 +103,20 @@ def main() -> None:
             elapsed_ms = int(elapsed * 1000)
             if success:
                 ok += 1
-                print(
-                    f"{COLOR_GREEN}  ✓ ({idx}/{len(rpc_list)}) {rpc_url} | {elapsed_ms}ms | {message}{COLOR_RESET}"
-                )
+                print(color_text(f"  ✓ ({idx}/{len(rpc_list)}) {rpc_url} | {elapsed_ms}ms | {message}", COLOR_GREEN))
             else:
                 failed += 1
-                print(
-                    f"{COLOR_RED}  ✗ ({idx}/{len(rpc_list)}) {rpc_url} | {elapsed_ms}ms | {message}{COLOR_RESET}"
-                )
+                print(color_text(f"  ✗ ({idx}/{len(rpc_list)}) {rpc_url} | {elapsed_ms}ms | {message}", COLOR_RED))
 
     print("\n" + "=" * 72)
     print("RPC 測試摘要")
     print("=" * 72)
     print(f"總數: {total}")
-    print(f"{COLOR_GREEN}成功: {ok}{COLOR_RESET}")
-    print(f"{COLOR_RED}失敗: {failed}{COLOR_RESET}")
+    print(color_text(f"成功: {ok}", COLOR_GREEN))
+    print(color_text(f"失敗: {failed}", COLOR_RED))
 
     if failed > 0:
-        print(f"\n{COLOR_YELLOW}提示：可先移除/替換失敗率高的 RPC，再執行 tx_checker.py。{COLOR_RESET}")
+        print_warn("\n提示：可先移除/替換失敗率高的 RPC，再執行 tx_checker.py。")
 
 
 if __name__ == "__main__":
